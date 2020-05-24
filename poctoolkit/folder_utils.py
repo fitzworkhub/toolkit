@@ -31,3 +31,15 @@ def pageFilename(filepath: str, page: str) -> str:
     filename, extension = os.path.splitext(filepath)
     page_filepath = f"{filename}_page_{page}{extension}"
     return page_filepath
+
+
+def get_folder_differences(src_folder, dst_folder):
+    pdf_filepaths = files_from_directory(src_folder, '*.pdf')
+    processed_paths = files_from_directory(dst_folder)
+
+    src_filenames = set(map(os.path.basename, pdf_filepaths))
+    dst_filenames = set(map(os.path.basename, processed_paths))
+    compute_files = src_filenames.difference(dst_filenames)
+    compute_filepaths = [os.path.join(src_folder, compute_file)
+                         for compute_file in compute_files]
+    return compute_filepaths
