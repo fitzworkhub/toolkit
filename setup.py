@@ -26,7 +26,7 @@ setup(
         "PyPDF2==1.26.0",
         "python-dateutil==2.8.1",
         "pytz==2020.1",
-        "requests==2.23.0"
+        "requests==2.23.0",
         "sh==1.13.1",
         "six==1.15.0",
         "urllib3==1.25.9",

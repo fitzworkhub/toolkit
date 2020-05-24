@@ -2,3 +2,5 @@
 __pycache__/
 
 toolkit-env/
+
+*.egg-info/
