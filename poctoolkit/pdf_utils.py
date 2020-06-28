@@ -5,7 +5,10 @@ Current functionality:
 - count pages
 - convert to png
 """
-from folder_utils import pageFilename
+import os
+import tempfile
+import shutil
+from .folder_utils import pageFilename
 from PyPDF2 import PdfFileReader, PdfFileWriter
 from sh import convert
 from typing import Iterable
@@ -17,10 +20,10 @@ from indico.queries import JobStatus, RetrieveStorageObject
 
 
 def count_pages(filename: str) -> int:
-    with open(filename, 'rb') as f:
+    with open(filename, "rb") as f:
         pdf = PdfFileReader(f)
         if pdf.isEncrypted:
-            pdf.decrypt('')
+            pdf.decrypt("")
         n_pages = pdf.getNumPages()
     return n_pages
 
@@ -36,9 +39,9 @@ def pdf_to_png(pdf_filepath: str, output_filepath: str) -> None:
             "-strip",
             "-background",
             "white",
-            '-alpha',
-            'remove',
-            output_filepath
+            "-alpha",
+            "remove",
+            output_filepath,
         )
         return
 
@@ -48,35 +51,63 @@ def pdf_to_png(pdf_filepath: str, output_filepath: str) -> None:
         return
 
 
-def separate_pdf(
-        pdf_input_path: str,
-        pdf_output_path: str,
-        pages: Iterable) -> None:
+def separate_pdf(pdf_input_path: str, pdf_output_path: str, pages: Iterable) -> None:
 
-    with open(pdf_input_path, 'rb') as f:
-        pdf = PdfFileReader(f)
-        if pdf.isEncrypted:
-            pdf.decrypt('')
+    # create staging file for filename issues
+    staging_file_handle = tempfile.TemporaryFile()
 
-        for page in pages:
-            out_pdf = PdfFileWriter()
-            output_filepath = pageFilename(pdf_output_path, page)
-            out_pdf.addPage(pdf.getPage(page))
-            with open(output_filepath, 'wb') as f:
-                out_pdf.write(f)
+    with open(pdf_input_path, "rb") as f:
+        shutil.copyfileobj(f, staging_file_handle)
+        staging_file_handle.seek(0)
+
+    pdf = PdfFileReader(staging_file_handle)
+    if pdf.isEncrypted:
+        pdf.decrypt("")
+
+    for page in pages:
+        out_pdf = PdfFileWriter()
+        output_filepath = pageFilename(pdf_output_path, page)
+        out_pdf.addPage(pdf.getPage(page))
+        with open(output_filepath, "wb") as f:
+            out_pdf.write(f)
+    staging_file_handle.close()
 
 
-def pdf_extraction(files, client, config):
+def split_pdf_pages(pdf_input_path: str, output_folder: str):
+    """
+    Split pdf into individual pages and save to output_folder with name
+    filename + _page_x.pdf
+    """
+    # create staging file for filename issues
+    staging_file_handle = tempfile.TemporaryFile()
+
+    with open(pdf_input_path, "rb") as f:
+        shutil.copyfileobj(f, staging_file_handle)
+        staging_file_handle.seek(0)
+
+    pdf = PdfFileReader(staging_file_handle, strict=False)
+    if pdf.isEncrypted:
+        pdf.decrypt("")
+
+    for page_num in range(pdf.numPages):
+        out_pdf = PdfFileWriter()
+        pdf_page_filepath = pageFilename(pdf_input_path, page_num)
+        pdf_filename = os.path.basename(pdf_page_filepath)
+        output_filepath = os.path.join(output_folder, pdf_filename)
+        out_pdf.addPage(pdf.getPage(page_num))
+        with open(output_filepath, "wb") as f:
+            out_pdf.write(f)
+    staging_file_handle.close()
+
+
+def pdf_extraction(pdf_filepaths, client, config):
     """
     get pdf extraction dictionary objects
     """
     pdf_extractions = []
     failed_files = []
     jobs = client.call(
-        DocumentExtraction(
-            files=files,
-            json_config=json.dumps(config)
-        )
+        DocumentExtraction(files=pdf_filepaths, json_config=json.dumps(config))
     )
 
     for i, j in enumerate(jobs):
@@ -85,6 +116,6 @@ def pdf_extraction(files, client, config):
             doc_extract = client.call(RetrieveStorageObject(job.result))
             pdf_extractions.append(doc_extract)
         except:
-            failed_files.append(files[i])
+            failed_files.append(pdf_filepaths[i])
 
     return pdf_extractions, failed_files

@@ -1,9 +1,8 @@
-
 import os
 import glob
 
 
-def files_from_directory(src_dir, regex='*.*'):
+def files_from_directory(src_dir, regex="*.*"):
     """
     return a list of all files in src_dir that match the regex
     """
@@ -34,12 +33,13 @@ def pageFilename(filepath: str, page: str) -> str:
 
 
 def get_folder_differences(src_folder, dst_folder):
-    pdf_filepaths = files_from_directory(src_folder, '*.pdf')
+    pdf_filepaths = files_from_directory(src_folder, "*.pdf")
     processed_paths = files_from_directory(dst_folder)
 
     src_filenames = set(map(os.path.basename, pdf_filepaths))
     dst_filenames = set(map(os.path.basename, processed_paths))
     compute_files = src_filenames.difference(dst_filenames)
-    compute_filepaths = [os.path.join(src_folder, compute_file)
-                         for compute_file in compute_files]
+    compute_filepaths = [
+        os.path.join(src_folder, compute_file) for compute_file in compute_files
+    ]
     return compute_filepaths
