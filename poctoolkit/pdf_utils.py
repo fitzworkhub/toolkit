@@ -6,6 +6,8 @@ Current functionality:
 - convert to png
 """
 import os
+import sys
+import random
 import tempfile
 import shutil
 from .folder_utils import pageFilename
@@ -73,10 +75,13 @@ def separate_pdf(pdf_input_path: str, pdf_output_path: str, pages: Iterable) -> 
     staging_file_handle.close()
 
 
-def split_pdf_pages(pdf_input_path: str, output_folder: str):
+def split_pdf_pages(pdf_input_path: str, output_folder: str, max_pages=None):
     """
     Split pdf into individual pages and save to output_folder with name
     filename + _page_x.pdf
+
+    if max_pages is provided, only take up to the amount provided.
+    Pages will be selected at random
     """
     # create staging file for filename issues
     staging_file_handle = tempfile.TemporaryFile()
@@ -89,7 +94,13 @@ def split_pdf_pages(pdf_input_path: str, output_folder: str):
     if pdf.isEncrypted:
         pdf.decrypt("")
 
-    for page_num in range(pdf.numPages):
+    page_numbers = range(pdf.numPages)
+
+    # Take random page numbers if max_pages is provided
+    if max_pages and pdf.numPages > max_pages:
+        page_numbers = random.sample(page_numbers, max_pages)
+
+    for page_num in page_numbers:
         out_pdf = PdfFileWriter()
         pdf_page_filepath = pageFilename(pdf_input_path, page_num)
         pdf_filename = os.path.basename(pdf_page_filepath)
