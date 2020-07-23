@@ -43,3 +43,11 @@ def get_folder_differences(src_folder, dst_folder):
         os.path.join(src_folder, compute_file) for compute_file in compute_files
     ]
     return compute_filepaths
+
+
+def check_folder(data_path):
+    """
+    Check if data_path exists, if not create datapath
+    """
+    if not os.path.exists(data_path):
+        os.mkdir(data_path)
