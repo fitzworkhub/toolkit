@@ -22,7 +22,7 @@ setup(
         "msgpack-numpy==0.4.4.3",
         "numpy==1.18.4",
         "pandas==1.0.3",
-        "Pillow==7.1.2",
+        "Pillow==8.1.1",
         "PyPDF2==1.26.0",
         "python-dateutil==2.8.1",
         "pytz==2020.1",
