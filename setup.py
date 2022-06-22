@@ -20,7 +20,7 @@ setup(
         "indico-client==3.2.2",
         "msgpack==1.0.0",
         "msgpack-numpy==0.4.4.3",
-        "numpy==1.18.4",
+        "numpy==1.22.0",
         "pandas==1.0.3",
         "Pillow==7.1.2",
         "PyPDF2==1.26.0",
